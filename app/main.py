@@ -8,7 +8,7 @@ from psycopg2.extras import RealDictCursor
 import time
 from sqlalchemy.orm import Session
 from . import models
-from .database import engine
+from .database import engine, get_db
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -55,18 +55,28 @@ def find_post_index(id):
 def root():
     return {"message": "Hello World"}
 
+@app.get("/sqlalchemy")
+def test_post(db:Session=Depends(get_db)):
+
+    post = db.query(models.Post).all()
+    return {"message": post}
+
 @app.get("/posts")
-def get_posts():
-    cursor.execute("""SELECT * FROM posts""")
-    posts = cursor.fetchall()
+def get_posts(db:Session=Depends(get_db)):
+    # older methods
+    # cursor.execute("""SELECT * FROM posts""")
+    # posts = cursor.fetchall()
+    posts = db.query(models.Post).all()
+
     return {"Data":posts} 
 
 @app.post("/create_post",status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
+def create_post(post: Post,db:Session=Depends(get_db)):
     
-    cursor.execute("""INSERT INTO posts (title,content,published) values (%s,%s,%s) returning * """,(post.title,post.content,post.published))
-    post = cursor.fetchone()
-    conn.commit()
+    # cursor.execute("""INSERT INTO posts (title,content,published) values (%s,%s,%s) returning * """,(post.title,post.content,post.published))
+    # post = cursor.fetchone()
+    # conn.commit()
+    
     return {"New Post":post}
     
 
