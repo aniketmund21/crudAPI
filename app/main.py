@@ -76,16 +76,26 @@ def create_post(post: Post,db:Session=Depends(get_db)):
     # cursor.execute("""INSERT INTO posts (title,content,published) values (%s,%s,%s) returning * """,(post.title,post.content,post.published))
     # post = cursor.fetchone()
     # conn.commit()
-    
+
+    #post.dict will solve manual problem of entering rhe fields
+    # post = models.Post(title=post.title,content=post.content,published=post.published)
+    post = models.Post(**post.dict())
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+
     return {"New Post":post}
     
 
 
 @app.get("/posts/{id}")
-def get_post(id):
+def get_post(id,db:Session=Depends(get_db)):
     
-    cursor.execute("""Select * from posts where id = %s """,(id))
-    post = cursor.fetchone()
+    # cursor.execute("""Select * from posts where id = %s """,(id))
+    # post = cursor.fetchone()
+
+    post = db.query(models.Post).filter(models.Post.id == id).first()
+
     if not post:
         raise HTTPException(status.HTTP_404_NOT_FOUND, 
                             detail=f'No post found with id {id}')
