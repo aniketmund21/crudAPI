@@ -7,7 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from sqlalchemy.orm import Session
-from . import models
+from . import models,schemas 
 from .database import engine, get_db
 
 
@@ -32,11 +32,7 @@ while True:
         print ("Error: ", error)      
         time.sleep(2)              
 
-#schema for our post request
-class Post(BaseModel):#basemodel from pydantic library
-    title:str
-    content:str
-    published:bool = True
+
     
 
 my_posts = [{"title":"I am iron man","content":"i am content","id":"1",},{"title":"Hey Baby", "content":"I am content 2","id":"2"}]
@@ -55,11 +51,6 @@ def find_post_index(id):
 def root():
     return {"message": "Hello World"}
 
-@app.get("/sqlalchemy")
-def test_post(db:Session=Depends(get_db)):
-
-    post = db.query(models.Post).all()
-    return {"message": post}
 
 @app.get("/posts")
 def get_posts(db:Session=Depends(get_db)):
@@ -71,7 +62,7 @@ def get_posts(db:Session=Depends(get_db)):
     return {"Data":posts} 
 
 @app.post("/create_post",status_code=status.HTTP_201_CREATED)
-def create_post(post: Post,db:Session=Depends(get_db)):
+def create_post(post: schemas.PostCreate,db:Session=Depends(get_db)):
     
     # cursor.execute("""INSERT INTO posts (title,content,published) values (%s,%s,%s) returning * """,(post.title,post.content,post.published))
     # post = cursor.fetchone()
@@ -118,15 +109,15 @@ def delete_post(id,db:Session=Depends(get_db)):
 
 
 @app.put("/posts/{id}")
-def update_post(id,post:Post,db:Session=Depends(get_db)):
+def update_post(id,post:schemas.PostBase,db:Session=Depends(get_db)):
     # cursor.execute("""update posts set title=%s,content=%s,published=%s where id =%s returning *"""
     # ,(post.title,post.content,post.published,id))
     # updated_post = cursor.fetchone()
     # conn.commit()
     post_query = db.query(models.Post).filter(models.Post.id == id)
-    post = post.first()
+    updated_post = post_query.first()
 
-    if post == None:
+    if updated_post == None:
         raise HTTPException(status.HTTP_404_NOT_FOUND,detail = f'No post found with id {id}')
     
     updated_post= post_query.update(post.title, post.content)
