@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional,List
 from fastapi import FastAPI,Response,status,HTTPException,Depends 
 from fastapi.param_functions import Body
 from random import randrange
@@ -52,16 +52,16 @@ def root():
     return {"message": "Hello World"}
 
 
-@app.get("/posts")
+@app.get("/posts",response_model=List[schemas.Post])
 def get_posts(db:Session=Depends(get_db)):
     # older methods
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
 
-    return {"Data":posts} 
+    return posts
 
-@app.post("/create_post",status_code=status.HTTP_201_CREATED)
+@app.post("/create_post",status_code=status.HTTP_201_CREATED,response_model=schemas.Post)
 def create_post(post: schemas.PostCreate,db:Session=Depends(get_db)):
     
     # cursor.execute("""INSERT INTO posts (title,content,published) values (%s,%s,%s) returning * """,(post.title,post.content,post.published))
@@ -70,16 +70,16 @@ def create_post(post: schemas.PostCreate,db:Session=Depends(get_db)):
 
     #post.dict will solve manual problem of entering rhe fields
     # post = models.Post(title=post.title,content=post.content,published=post.published)
-    post = models.Post(**post.dict())
-    db.add(post)
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
     db.commit()
-    db.refresh(post)
+    db.refresh(new_post)
 
-    return {"New Post":post}
+    return new_post 
     
 
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}",response_model=schemas.Post)
 def get_post(id,db:Session=Depends(get_db)):
     
     # cursor.execute("""Select * from posts where id = %s """,(id))
@@ -108,7 +108,7 @@ def delete_post(id,db:Session=Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put("/posts/{id}")
+@app.put("/posts/{id}",response_model=schemas.Post)
 def update_post(id,post:schemas.PostBase,db:Session=Depends(get_db)):
     # cursor.execute("""update posts set title=%s,content=%s,published=%s where id =%s returning *"""
     # ,(post.title,post.content,post.published,id))
