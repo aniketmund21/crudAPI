@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr
 from datetime import datetime
 
 #schema for our post request
@@ -20,4 +20,8 @@ class Post(BaseModel):
 
     class Config:
         orm_mode = True
+
+class UserCreate(BaseModel):
+    email:EmailStr
+    password:str
 

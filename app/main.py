@@ -125,6 +125,15 @@ def update_post(id,post:schemas.PostBase,db:Session=Depends(get_db)):
     return {'Data':updated_post}
 
 
+@app.post("/users",status_code=status.HTTP_201_CREATED)
+def create_user(user:schemas.UserCreate,db:Session=Depends(get_db)):
+
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
 
 
 
