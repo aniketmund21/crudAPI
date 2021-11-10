@@ -6,10 +6,10 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from sqlalchemy.orm import Session
-from . import models,schemas 
-from .database import engine, get_db
 
+from sqlalchemy.orm import Session
+from . import models,schemas
+from .database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
 #use uvicorn app.main:app --reload to start the server
@@ -125,7 +125,7 @@ def update_post(id,post:schemas.PostBase,db:Session=Depends(get_db)):
     return {'Data':updated_post}
 
 
-@app.post("/users",status_code=status.HTTP_201_CREATED)
+@app.post("/users",status_code=status.HTTP_201_CREATED,response_model=schemas.UserOut)
 def create_user(user:schemas.UserCreate,db:Session=Depends(get_db)):
 
     new_user = models.User(**user.dict())
