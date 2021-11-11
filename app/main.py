@@ -139,4 +139,13 @@ def create_user(user:schemas.UserCreate,db:Session=Depends(get_db)):
     return new_user
 
 
+@app.get("/users/{id}",response_model=schemas.UserOut)
+def get_user(id:int,db:Session=Depends(get_db)):
+
+    user_query = db.query(models.User).filter(models.User.id == id)
+    user = user_query.first()
+    if user == None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND,detail = f'No post found with id {id}')
+    
+    return user
 
